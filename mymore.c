@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include<stdlib.h>
 #define PAGELINES 24
 #define LINELEN 512
 
@@ -35,12 +36,19 @@ void do_more(FILE *readIn)
 {
     char readBuff[LINELEN];
     int lineNums = 0, reply = 0;
+    FILE *ttyFile = fopen("/dev/tty", "r");
+    if (ttyFile == NULL)
+    {
+        fprintf(stderr, "无法打开tty");
+        exit(1);
+    }
+    
     while (fgets(readBuff, LINELEN, readIn))
     {
         //如果打印了一屏，就等待用户输入
         if (lineNums == PAGELINES)
         {
-            reply = see_more();
+            reply = see_more(ttyFile);
             if (!reply)
             {
                 break;
@@ -53,12 +61,13 @@ void do_more(FILE *readIn)
         }
         ++lineNums;
     }
+    fclose(ttyFile);
 }
 
-int see_more()
+int see_more(FILE * cmd)
 {
     printf("\033[41;36mmore\033[0m");
-    switch (getchar())
+    switch (getc(cmd))
     {
     case 'q':
         return 0;
